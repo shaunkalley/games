@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="org.mozilla.javascript:com.springsource.org.mozilla.javascript:1.7.0.R2" type="repository">
+    <properties maven-id="org.mozilla.javascript:com.springsource.org.mozilla.javascript:1.7.0.R2" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/com.springsource.org.mozilla.javascript-1.7.0.R2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/com.springsource.org.mozilla.javascript-1.7.0.R2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

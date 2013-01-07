@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="httpunit:httpunit:1.7" type="repository">
+    <properties maven-id="httpunit:httpunit:1.7" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/httpunit-1.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/servlet-api-2.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jtidy-4aug2000r7-dev.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib/httpunit-1.7-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/httpunit-1.7-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/servlet-api-2.3-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jtidy-4aug2000r7-dev-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
