@@ -1,10 +1,5 @@
 package com.games.euchre;
 
-import java.util.Map;
-
-import com.games.server.JsonParsable;
-import com.games.server.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
 import static com.games.euchre.Suit.Color.BLACK;
 import static com.games.euchre.Suit.Color.RED;
 
@@ -19,7 +14,7 @@ import static com.games.euchre.Suit.Color.RED;
  * diamonds, and clubs), plus four additional suits to allow for 8-player
  * games.
  */
-public enum Suit implements JsonParsable {
+public enum Suit {
 
     SPADES(BLACK),
     HEARTS(RED),
@@ -30,34 +25,6 @@ public enum Suit implements JsonParsable {
     BLACK3(BLACK),
     BLACK4(BLACK),
     RED4(RED);
-
-    private static final JsonParser<Suit> jsonParser = new JsonParser<Suit>() {
-
-        @Override
-        public String toJson(Suit suit) {
-            return "{ \"Suit\": { \"name\": \"" + suit.name() + "\" } }";
-        }
-
-        @Override
-        public Suit parseJson(String json) throws Exception {
-            ObjectMapper mapper = new ObjectMapper();
-            @SuppressWarnings("unchecked")
-            Map<String, Map<String, String>> map = mapper.readValue(json, Map.class);
-            Map<String, String> innerMap = map.get("Suit");
-            if (innerMap == null) {
-                throw new AssertionError("");
-            }
-            String name = innerMap.get("name");
-            if (name == null) {
-                throw new AssertionError("");
-            }
-            return valueOf(name);
-        }
-    };
-
-    public static JsonParser<Suit> getJsonParser() {
-        return jsonParser;
-    }
 
     /** This suit's colour (black or red). */
     private final Color color;

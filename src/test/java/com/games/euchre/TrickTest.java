@@ -4,6 +4,7 @@
 //import java.util.Arrays;
 //import java.util.List;
 //
+//import com.games.server.AnonymousPlayer;
 //import com.games.server.Game;
 //import com.games.server.Player;
 //import junit.framework.Assert;
@@ -27,13 +28,13 @@
 //    @Before
 //    public void setup() {
 //        EuchreGameOptions options = new EuchreGameOptions();
-//        players = Arrays.asList(
-//            new Player(1L, "A"),
-//            new Player(2L, "B"),
-//            new Player(3L, "C"),
-//            new Player(4L, "D")
+//        players = new ArrayList<>();
+//        players.add(new AnonymousPlayer("A"));
+//        players.add(new AnonymousPlayer("B"));
+//        players.add(new AnonymousPlayer("C"));
+//        players.add(new AnonymousPlayer("D"));
 //        );
-//        Game game = new Game(null, options, players);
+//        Game game = new EuchreGame(null, null);
 //        hand = new Hand(game, 0, players.get(0));
 //    }
 //
@@ -47,7 +48,7 @@
 //    }
 //
 //    public void testWinner(Suit trump, Card player1Card, Card player2Card, Card player3Card, Card player4Card, Player expectedWinner) {
-//        hand.getTrumpSelection().setTrump(trump);
+//        hand.setTrump(trump);
 //        hand.setCards(players.get(0), new ArrayList<>(Arrays.asList(player1Card, new Card(HEARTS, TEN), new Card(HEARTS, NINE), new Card(DIAMONDS, TEN), new Card(DIAMONDS, NINE))));
 //        hand.setCards(players.get(1), new ArrayList<>(Arrays.asList(player2Card, new Card(CLUBS, ACE), new Card(HEARTS, KING), new Card(HEARTS, QUEEN), new Card(HEARTS, TEN))));
 //        hand.setCards(players.get(2), new ArrayList<>(Arrays.asList(player3Card, new Card(DIAMONDS, ACE), new Card(DIAMONDS, KING), new Card(DIAMONDS, QUEEN), new Card(DIAMONDS, JACK))));

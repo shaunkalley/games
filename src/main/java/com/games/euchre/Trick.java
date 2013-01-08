@@ -22,6 +22,8 @@ public final class Trick {
     /** The hand this trick is played in. */
     private final Hand hand;
 
+    private final int number;
+
     /** The players in order that they play in the trick. */
     private List<Player> playOrder;
 
@@ -34,13 +36,14 @@ public final class Trick {
     /** The winner of this trick. */
     private Player winner;
 
-    public Trick(Hand hand, List<Player> playOrder) {
+    public Trick(Hand hand, int number, List<Player> playOrder) {
         EuchreGameOptions gameOptions = hand.getGame().getGameOptions();
         int numberOfPlayers = gameOptions.getNumberOfPlayers();
         if (playOrder.size() != numberOfPlayers && playOrder.size() != numberOfPlayers - 1) {
             throw new IllegalArgumentException("");
         }
         this.hand = hand;
+        this.number = number;
         this.playOrder = Collections.unmodifiableList(playOrder);
         cards = new ArrayList<>(playOrder.size());
         turn = 0;
@@ -48,6 +51,10 @@ public final class Trick {
 
     public Hand getHand() {
         return hand;
+    }
+
+    public int getNumber() {
+        return number;
     }
 
     @ReadOnlyCollectionResult

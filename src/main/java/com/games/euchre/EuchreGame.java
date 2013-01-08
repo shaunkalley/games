@@ -3,10 +3,7 @@ package com.games.euchre;
 import java.util.*;
 
 import com.games.euchre.messages.*;
-import com.games.server.ClientMessage;
-import com.games.server.Game;
-import com.games.server.GameCoordinator;
-import com.games.server.Player;
+import com.games.server.*;
 import com.games.util.ReadOnlyCollectionResult;
 
 /**
@@ -87,7 +84,7 @@ public class EuchreGame extends Game {
         this.partnerships = Collections.unmodifiableList(partnerships);
 
         // send notice of deal order and partnerships
-        gameCoordinator.addMessage(new DealOrderSetMessage(this), players);
+        GlobalGameCoordinator.enqueueMessage(new DealOrderSetMessage(this), players);
 
         // set the first dealer
         nextDealer = dealOrder.get(0);
@@ -97,69 +94,89 @@ public class EuchreGame extends Game {
 
                 // start hand
                 Hand hand = startNextHand();
-                gameCoordinator.addMessage(new HandStartedMessage(this, hand), getPlayers());
+                GlobalGameCoordinator.enqueueMessage(new HandStartedMessage(this, hand), getPlayers());
 
                 // deal cards
                 hand.dealCards();
                 for (Player player : hand.getBidOrder()) {
                     List<Card> dealtCards = hand.getDealtCards(player);
-                    gameCoordinator.addMessage(new CardsDealtMessage(this, hand, dealtCards));
+                    GlobalGameCoordinator.enqueueMessage(new CardsDealtMessage(this, hand, dealtCards));
                 }
 
                 // first round of bidding
+                trumpdeclared:
                 for (Player player : hand.getBidOrder()) {
                     ClientMessage message = getNextClientMessage(player, "passBid", "orderDealerUp", "pickCardUp");
                     switch (message.getAction()) {
                         case "passBid":
-                            gameCoordinator.addMessage(new PlayerPassedBidMessage(this, hand));
+                            GlobalGameCoordinator.enqueueMessage(new PlayerPassedBidMessage(this, hand));
                             break;
                         case "orderDealerUp":
-                            hand.dealerOrderedUp(gameCoordinator.getPlayer(message.getSessionId()), message.getBooleanAttribute("goingAlone"));
-                            //gameCoordinator.addMessage(new PlayerOrderedDealerUpMessage(this));
+                            hand.dealerOrderedUp(GlobalGameCoordinator.getPlayer(message.getSessionId()), message.getBooleanAttribute("goingAlone"));
+                            //GlobalGameCoordinator.enqueueMessage(new PlayerOrderedDealerUpMessage(this));
                             message = getNextClientMessage(hand.getDealer(), "discardCard");
 
-                            break;
+                            break trumpdeclared;
                         case "pickUpCard":
                             hand.dealerPickedUpCard(message.getBooleanAttribute("goingAlone"));
-                            //gameCoordinator.addMessage(new DealerPickedUpCardMessage());
+                            //GlobalGameCoordinator.enqueueMessage(new DealerPickedUpCardMessage());
                             message = getNextClientMessage(hand.getDealer(), "discardCard");
 
 
-                            break;
+                            break trumpdeclared;
                         default:
                             throw new AssertionError("");
-                    }
-                    if (hand.getTrump() != null) {
-                        break;
                     }
                 }
 
                 // second round of bidding
                 if (hand.getTrump() == null) {
+                    trumpdeclared:
                     for (Player player : hand.getBidOrder()) {
                         ClientMessage message = getNextClientMessage(player, "passBid", "declareTrump");
                         switch (message.getAction()) {
                             case "passBid":
-                                gameCoordinator.addMessage(new PlayerPassedBidMessage(this, hand));
+                                GlobalGameCoordinator.enqueueMessage(new PlayerPassedBidMessage(this, hand));
                                 break;
                             case "declareTrump":
-                                hand.trumpDeclared(Suit.valueOf(message.getStringAttribute("suit")), gameCoordinator.getPlayer(message.getSessionId()), message.getBooleanAttribute("goingAlone"));
-                                gameCoordinator.addMessage(new TrumpDeclaredMessage(this, hand));
-                                break;
+                                hand.trumpDeclared(Suit.valueOf(message.getStringAttribute("suit")), GlobalGameCoordinator.getPlayer(message.getSessionId()), message.getBooleanAttribute("goingAlone"));
+                                GlobalGameCoordinator.enqueueMessage(new TrumpDeclaredMessage(this, hand));
+                                break trumpdeclared;
                         }
                     }
                 }
 
                 // play tricks
+                cardslayeddown:
                 for (int i = 0; i < gameOptions.getTricksPerHand(); i++) {
                     Trick trick = hand.startNextTrick();
                     for (Player player : trick.getPlayOrder()) {
-                        ClientMessage message = getNextClientMessage(player, "playCard");
+                        ClientMessage message = getNextClientMessage(player, "playCard", "layCardsDown");
+                        switch (message.getAction()) {
+                            case "playCard":
+                                try {
+                                    Card card = Card.parse(message.getStringAttribute("card"));
+                                    trick.cardPlayed(player, card);
+                                    GlobalGameCoordinator.enqueueMessage(new CardPlayedMessage(trick, player, card), players);
+                                } catch (DidNotFollowSuitException e) {
+                                    // TODO
+                                }
+                                break;
+                            case "layCardsDown":
+                                // TODO
+                                break cardslayeddown;
 
-                        //trick.cardPlayed(player, message.getCardAttribute(""));
+                        }
+                    }
+                    // TODO: send trick finished message
+
+                    // check if more tricks need to be played in order to score the hand
+                    if (hand.areAllPointsPlayed()) {
+                        break;
                     }
                 }
 
+                // score the hand
 
 
             }

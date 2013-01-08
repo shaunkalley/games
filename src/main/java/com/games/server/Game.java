@@ -82,7 +82,7 @@ public abstract class Game {
         ClientMessage clientMessage;
         do {
             clientMessage = clientMessageQueue.take();
-            Player messagePlayer = gameCoordinator.getPlayer(clientMessage.getSessionId());
+            Player messagePlayer = GlobalGameCoordinator.getPlayer(clientMessage.getSessionId());
             if (messagePlayer != player) {
                 // TODO: send invalid player message
             } else if (ArrayUtils.contains(acceptableActions, clientMessage.getAction())) {

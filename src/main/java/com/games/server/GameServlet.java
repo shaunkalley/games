@@ -30,7 +30,7 @@ public abstract class GameServlet extends HttpServlet {
 
     private static final Logger logger = Logger.getLogger(GameServlet.class.getName());
 
-    private static final long timeout = 600000L;
+    private static final long timeout = 600000L; // 10 minutes
 
     private GameCoordinator gameCoordinator;
 

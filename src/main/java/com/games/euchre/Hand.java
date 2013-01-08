@@ -50,8 +50,6 @@ public final class Hand {
     /** The tricks played in this hand. */
     private final LinkedList<Trick> tricks;
 
-    private Trick currentTrick;
-
     private Partnership winner;
 
     public Hand(EuchreGame game, int number, Player dealer) {
@@ -265,10 +263,14 @@ public final class Hand {
             }
         }
 
-        Trick trick = new Trick(this, Collections.unmodifiableList(playOrder));
+        Trick trick = new Trick(this, tricks.size() + 1, Collections.unmodifiableList(playOrder));
         tricks.add(trick);
-        currentTrick = trick;
         return trick;
+    }
+
+    public boolean areAllPointsPlayed() {
+        // TODO
+        return false;
     }
 
     public boolean hasCard(Player player, Card card) {

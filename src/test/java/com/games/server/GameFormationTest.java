@@ -78,7 +78,7 @@ public class GameFormationTest {
     public static void doGetNextMessage(WebConversation client, String nickname) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("Getting next message (" + nickname + ")...");
-        WebResponse response = client.getResponse("http://127.0.0.1:8080/games/euchre?action=getNextClientMessage");
+        WebResponse response = client.getResponse("http://127.0.0.1:8080/games/euchre?action=getNextMessage");
         sb.append("  response code = " + response.getResponseCode());
         sb.append("  response = " + response.getText());
         log(sb.toString());

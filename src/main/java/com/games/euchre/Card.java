@@ -1,10 +1,10 @@
 package com.games.euchre;
 
-import java.util.Map;
+import java.text.MessageFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import com.games.server.JsonParsable;
-import com.games.server.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.games.util.Immutable;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,41 +13,16 @@ import org.codehaus.jackson.map.ObjectMapper;
  * Time: 9:12 AM
  * To change this template use File | Settings | File Templates.
  *
- * A standard playing card.
+ * A standard playing card.  The string representation for this class is
+ * "{Suit}/{Rank}" where {Suit} is the enum name of the suit, and {Rank} is the
+ * enum name of the rank, e.g., the ace of spades would be represented as
+ * "SPADES/ACE".
  */
-public final class Card implements JsonParsable {
+@Immutable
+public final class Card {
 
-    private static final JsonParser<Card> jsonParser = new JsonParser<Card>() {
-
-        @Override
-        public String toJson(Card card) {
-            return "{ \"Card\": { \"suit\": " + Suit.getJsonParser().toJson(card.getSuit()) + ", \"rank\": " + Rank.getJsonParser().toJson(card.getRank()) + "} }";
-        }
-
-        @Override
-        public Card parseJson(String json) throws Exception {
-            ObjectMapper mapper = new ObjectMapper();
-            @SuppressWarnings("unchecked")
-            Map<String, Map<String, String>> map = mapper.readValue(json, Map.class);
-            Map<String, String> innerMap = map.get("Card");
-            if (innerMap == null) {
-                throw new AssertionError("");
-            }
-            String suitJson = innerMap.get("suit");
-            if (suitJson == null) {
-                throw new AssertionError("");
-            }
-            String rankJson = innerMap.get("rank");
-            if (rankJson == null) {
-                throw new AssertionError("");
-            }
-            return new Card(Suit.getJsonParser().parseJson(suitJson), Rank.getJsonParser().parseJson(rankJson));
-        }
-    };
-
-    public static JsonParser<Card> getJsonParser() {
-        return jsonParser;
-    }
+    private static final String formatPattern = "{0}/{1}";
+    private static final Pattern parsePattern = Pattern.compile("([A-Z]+)/(A-Z]+)");
 
     /** The card's suit. */
     private final Suit suit;
@@ -118,12 +93,29 @@ public final class Card implements JsonParsable {
     }
 
     /**
-     * Returns a string representation of this card from its suit and rank.
+     * Returns a "{Suit}/{Rank}" string representation of this card.
      *
      * @return this card's string representation
      */
     @Override
     public String toString() {
-        return rank.toString() + "/" + suit.toString();
+        return MessageFormat.format(formatPattern, suit.name(), rank.name());
+    }
+
+    /**
+     * Parse a "{Suit}/{Rank}" string representation of a card.
+     *
+     * @param input the string representation to parse
+     * @return the resultant Card
+     */
+    public static Card parse(String input) {
+        Matcher matcher = parsePattern.matcher(input);
+        if (matcher.matches()) {
+            Suit suit = Suit.valueOf(matcher.group(1));
+            Rank rank = Rank.valueOf(matcher.group(2));
+            return new Card(suit, rank);
+        } else {
+            throw new IllegalArgumentException("input doesn't match \"{Suit}/{Rank}\" pattern");
+        }
     }
 }

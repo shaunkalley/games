@@ -6,9 +6,6 @@ import java.util.List;
 
 import com.games.util.ReadOnlyCollectionResult;
 import org.apache.commons.lang3.ArrayUtils;
-import static com.games.euchre.EuchreGameOptions.DeckType.TWENTY_FOUR_CARDS;
-import static com.games.euchre.EuchreGameOptions.NumberOfPlayers.FOUR;
-import static com.games.euchre.EuchreGameOptions.Scoring.PLAY_TO_10_POINTS;
 import static com.games.euchre.EuchreGameOptions.ScoringType.EUCHRES;
 import static com.games.euchre.EuchreGameOptions.ScoringType.POINTS;
 import static com.games.euchre.Rank.*;
@@ -31,10 +28,10 @@ public class EuchreGameOptions {
         return new EuchreGameOptions();
     }
 
-    /** The number of players (4, 6, or 8). */
-    private NumberOfPlayers players = FOUR;
+    /** The number of players (3, 4, 6, or 8). */
+    private GameConfiguration gameConfiguration = GameConfiguration.DEFAULT;
 
-    private DeckType deckType = TWENTY_FOUR_CARDS;
+    private DeckType deckType = DeckType.DEFAULT;
 
     /** Whether to stick the dealer (force the dealer to call trump if the
      * other players pass on the second round of bidding), or declare a misdeal
@@ -42,18 +39,23 @@ public class EuchreGameOptions {
      */
     private boolean stickTheDealer = false;
 
-    private Scoring scoring = PLAY_TO_10_POINTS;
+    /** Whether players have to wait until trump has been played before it can
+     * be lead.
+     */
+    private boolean noTrumpLeadUntilPlayed = false;
+
+    private Scoring scoring = Scoring.DEFAULT;
 
     public EuchreGameOptions() {
     }
 
     public int getNumberOfPlayers() {
-        return players.getCount();
+        return gameConfiguration.getNumberOfPlayers();
     }
 
     @ReadOnlyCollectionResult
     public List<Suit> getSuits() {
-        return players.getSuits();
+        return gameConfiguration.getSuits();
     }
 
     public int getTricksPerHand() {
@@ -77,22 +79,25 @@ public class EuchreGameOptions {
         return scoring.getThreshold();
     }
 
-    public enum NumberOfPlayers {
+    public enum GameConfiguration {
 
-        FOUR(4),
-        SIX(6),
-        EIGHT(8);
+        THREE_PLAYERS(3, 4),
+        FOUR_PLAYERS(4, 4),
+        SIX_PLAYERS(6, 6),
+        EIGHT_PLAYERS(8, 8);
 
-        private final int count;
+        public static final GameConfiguration DEFAULT = FOUR_PLAYERS;
+
+        private final int numberOfPlayers;
         private final List<Suit> suits;
 
-        private NumberOfPlayers(int count) {
-            this.count = count;
-            suits = Collections.unmodifiableList(Arrays.asList(ArrayUtils.subarray(Suit.values(), 0, count)));
+        private GameConfiguration(int numberOfPlayers, int numberOfSuits) {
+            this.numberOfPlayers = numberOfPlayers;
+            suits = Collections.unmodifiableList(Arrays.asList(ArrayUtils.subarray(Suit.values(), 0, numberOfSuits)));
         }
 
-        public int getCount() {
-            return getCount();
+        public int getNumberOfPlayers() {
+            return numberOfPlayers;
         }
 
         public List<Suit> getSuits() {
@@ -104,6 +109,8 @@ public class EuchreGameOptions {
 
         TWENTY_FOUR_CARDS(5, ACE, KING, QUEEN, JACK, TEN, NINE),
         THIRTY_TWO_CARDS(7, ACE, KING, QUEEN, JACK, TEN, NINE, EIGHT, SEVEN);
+
+        public static final DeckType DEFAULT = TWENTY_FOUR_CARDS;
 
         private final int tricksPerHand;
 
@@ -142,6 +149,8 @@ public class EuchreGameOptions {
         PLAY_TO_15_POINTS(POINTS, 15),
         PLAY_TO_3_EUCHRES(EUCHRES, 3),
         PLAY_TO_5_EUCHRES(EUCHRES, 5);
+
+        public static final Scoring DEFAULT = PLAY_TO_10_POINTS;
 
         /** The type of score to keep (points or euchres). */
         private final ScoringType type;

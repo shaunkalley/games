@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,7 +74,8 @@ public class GameLoginServlet extends HttpServlet {
         }
         // TODO: do checks on the nickname for uniqueness, etc.
         AnonymousPlayer player = new AnonymousPlayer(nickname);
-        GlobalGameCoordinator.INSTANCE.addPlayer(request.getSession().getId(), player);
+        String loginId = GlobalGameCoordinator.playerLoggedIn(request.getSession().getId(), player);
+        response.addCookie(new Cookie("loginId", loginId));
         response.setStatus(SC_OK);
     }
 
