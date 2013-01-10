@@ -1,8 +1,7 @@
 package com.games.euchre;
 
-import com.games.server.Player;
-
-import static com.games.euchre.Rank.*;
+import com.games.server.PlayerContainer;
+import static com.games.euchre.Rank.JACK;
 
 /**
  * Created with IntelliJ IDEA.
@@ -155,7 +154,7 @@ public final class EuchreHelper {
     public static int getPoints(Trick trick) {
         Hand hand = trick.getHand();
         EuchreGameOptions gameOptions = trick.getHand().getGame().getGameOptions();
-        Player maker = trick.getHand().getMaker();
+        PlayerContainer maker = trick.getHand().getMaker();
         Partnership makers = trick.getHand().getGame().getPartnership(maker);
         Partnership winners = trick.getWinners();
         int tricksCount = hand.getTricks().size();

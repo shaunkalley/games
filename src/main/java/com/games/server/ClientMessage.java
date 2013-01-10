@@ -11,17 +11,14 @@ import java.util.Map;
  */
 public class ClientMessage extends Message {
 
-    private final String sessionId;
+    private final PlayerContainer sender;
 
-    public ClientMessage(String sessionId, Map<String, Object> attributes) {
+    public ClientMessage(PlayerContainer sender, Map<String, Object> attributes) {
         super(attributes);
-        if (sessionId == null) {
-            throw new IllegalArgumentException("session id cannot be null");
-        }
-        this.sessionId = sessionId;
+        this.sender = sender;
     }
 
-    public String getSessionId() {
-        return sessionId;
+    public PlayerContainer getSender() {
+        return sender;
     }
 }

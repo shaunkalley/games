@@ -2,8 +2,7 @@ package com.games.euchre;
 
 import java.util.*;
 
-import com.games.server.InvalidActionException;
-import com.games.server.Player;
+import com.games.server.PlayerContainer;
 import com.games.util.CalledBy;
 import com.games.util.ReadOnlyCollectionResult;
 
@@ -27,21 +26,21 @@ public final class Hand {
     private final int number;
 
     /** The dealer for this hand. */
-    private final Player dealer;
+    private final PlayerContainer dealer;
 
-    private final List<Player> bidOrder;
+    private final List<PlayerContainer> bidOrder;
 
     /** The cards that where dealt. */
-    private Map<Player, List<Card>> dealtCardsMap;
+    private Map<PlayerContainer, List<Card>> dealtCardsMap;
 
     /** The cards currently held by the players. */
-    private Map<Player, List<Card>> playerCardsMap;
+    private Map<PlayerContainer, List<Card>> playerCardsMap;
 
     private Card upturnedCard;
 
     private Suit trump;
 
-    private Player maker;
+    private PlayerContainer maker;
 
     private boolean makerGoingAlone;
 
@@ -52,19 +51,19 @@ public final class Hand {
 
     private Partnership winner;
 
-    public Hand(EuchreGame game, int number, Player dealer) {
+    public Hand(EuchreGame game, int number, PlayerContainer dealer) {
         this.game = game;
         this.number = number;
         this.dealer = dealer;
 
         // create a list of the players in order that they are going to be
         // dealt to and which they will bid in (the dealer will be last)
-        List<Player> bidOrder = new ArrayList<>(game.getDealOrder());
+        List<PlayerContainer> bidOrder = new ArrayList<>(game.getDealOrder());
         int dealerIndex = bidOrder.indexOf(dealer);
         if (dealerIndex < game.getGameOptions().getNumberOfPlayers() - 1) {
             for (int i = 0; i <= dealerIndex; i++) {
-                Player player = bidOrder.remove(0);
-                bidOrder.add(player);
+                PlayerContainer playerContainer = bidOrder.remove(0);
+                bidOrder.add(playerContainer);
             }
         }
         this.bidOrder = Collections.unmodifiableList(bidOrder);
@@ -82,12 +81,12 @@ public final class Hand {
         return number;
     }
 
-    public Player getDealer() {
+    public PlayerContainer getDealer() {
         return dealer;
     }
 
     @ReadOnlyCollectionResult
-    public List<Player> getBidOrder() {
+    public List<PlayerContainer> getBidOrder() {
         return bidOrder;
     }
 
@@ -102,17 +101,17 @@ public final class Hand {
         // deal in two rounds, giving either 2 or 3 cards to each player in each round
         Iterator<Card> cards = deck.iterator();
         Random random = new Random(); // use a random-number generator for determining whether to give 2 or 3 cards to the player in the first round of dealing
-        for (Player player : bidOrder) {
+        for (PlayerContainer playerContainer : bidOrder) {
             List<Card> playerCards = new ArrayList<>(5);
-            dealtCardsMap.put(player, playerCards);
+            dealtCardsMap.put(playerContainer, playerCards);
             playerCards.add(cards.next());
             playerCards.add(cards.next());
             if (random.nextBoolean()) {
                 playerCards.add(cards.next());
             }
         }
-        for (Player player : bidOrder) {
-            List<Card> playerCards = dealtCardsMap.get(player);
+        for (PlayerContainer playerContainer : bidOrder) {
+            List<Card> playerCards = dealtCardsMap.get(playerContainer);
             playerCards.add(cards.next());
             playerCards.add(cards.next());
             if (playerCards.size() == 4) {
@@ -121,13 +120,13 @@ public final class Hand {
         }
         upturnedCard = cards.next();
         dealtCardsMap = Collections.unmodifiableMap(dealtCardsMap);
-        for (Map.Entry<Player, List<Card>> entry : dealtCardsMap.entrySet()) {
+        for (Map.Entry<PlayerContainer, List<Card>> entry : dealtCardsMap.entrySet()) {
             playerCardsMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
         }
     }
 
     @ReadOnlyCollectionResult
-    public List<Card> getDealtCards(Player player) {
+    public List<Card> getDealtCards(PlayerContainer player) {
         return Collections.unmodifiableList(dealtCardsMap.get(player));
     }
 
@@ -136,9 +135,9 @@ public final class Hand {
     }
 
     // for test purposes only so we can model specific tricks
-    void setCards(Player player, List<Card> cards) {
+    void setCards(PlayerContainer playerContainer, List<Card> cards) {
         assert cards.size() == game.getGameOptions().getTricksPerHand();
-        playerCardsMap.put(player, cards);
+        playerCardsMap.put(playerContainer, cards);
     }
 
     /**
@@ -148,7 +147,7 @@ public final class Hand {
      * @param maker the player who ordered the dealer up
      * @param makerGoingAlone whether that player opted to go alone or not
      */
-    public void dealerOrderedUp(Player maker, boolean makerGoingAlone) {
+    public void dealerOrderedUp(PlayerContainer maker, boolean makerGoingAlone) {
         trump = upturnedCard.getSuit();
         this.maker = maker;
         this.makerGoingAlone = makerGoingAlone;
@@ -173,7 +172,7 @@ public final class Hand {
      */
     public void dealerDiscardedCard(Card card) {
         if (card == upturnedCard) {
-            throw new InvalidActionException(null); // TODO
+            //throw new InvalidActionException(null); // TODO
         }
         List<Card> dealerCards = playerCardsMap.get(dealer);
         if (!dealerCards.contains(card)) {
@@ -189,7 +188,7 @@ public final class Hand {
      * @param maker the player who called trump
      * @param makerGoingAlone whether the maker is going alone or not
      */
-    public void trumpDeclared(Suit trump, Player maker, boolean makerGoingAlone) {
+    public void trumpDeclared(Suit trump, PlayerContainer maker, boolean makerGoingAlone) {
         this.trump = trump;
         this.maker = maker;
         this.makerGoingAlone = makerGoingAlone;
@@ -202,7 +201,7 @@ public final class Hand {
         return trump;
     }
 
-    public Player getMaker() {
+    public PlayerContainer getMaker() {
         if (trump == null) {
             throw new IllegalStateException("trump not called yet");
         }
@@ -223,7 +222,7 @@ public final class Hand {
      * @param card the card
      */
     @CalledBy(Trick.class)
-    public void cardPlayed(Player player, Card card) {
+    public void cardPlayed(PlayerContainer player, Card card) {
         if (!hasCard(player, card)) {
             throw new AssertionError("card not held by player");
         }
@@ -239,7 +238,7 @@ public final class Hand {
     public Trick startNextTrick() {
 
         // create a list of the players who are going to take part in the trick
-        LinkedList<Player> playOrder = new LinkedList<>(game.getDealOrder());
+        LinkedList<PlayerContainer> playOrder = new LinkedList<>(game.getDealOrder());
         if (makerGoingAlone) {
             playOrder.remove(game.getPartner(maker));
         }
@@ -254,7 +253,7 @@ public final class Hand {
         } else {
             // winner of previous trick leads
             Trick previousTrick = tricks.getLast();
-            Player leader = previousTrick.getWinner();
+            PlayerContainer leader = previousTrick.getWinner();
             int leaderIndex = playOrder.indexOf(leader);
             if (leaderIndex != 0) {
                 for (int i = 0; i < leaderIndex; i++) {
@@ -273,11 +272,11 @@ public final class Hand {
         return false;
     }
 
-    public boolean hasCard(Player player, Card card) {
+    public boolean hasCard(PlayerContainer player, Card card) {
         return playerCardsMap.get(player).contains(card);
     }
 
-    public boolean hasSuit(Player player, Suit suit) {
+    public boolean hasSuit(PlayerContainer player, Suit suit) {
         for (Card card : playerCardsMap.get(player)) {
             if (card.getSuit() == suit) {
                 return true;

@@ -64,27 +64,6 @@ public abstract class GameServlet extends HttpServlet {
         logger.info("Game request received: uri=" + request.getRequestURI() + ", session id=" + request.getSession().getId() + ", requested session id=" + request.getRequestedSessionId() + ", query string=" + request.getQueryString());
         AsyncContext asyncContext = request.startAsync();
         request.getAsyncContext().setTimeout(timeout);
-        asyncContext.addListener(new AsyncListener() {
-            @Override
-            public void onComplete(AsyncEvent event) throws IOException {
-            }
-
-            @Override
-            public void onTimeout(AsyncEvent event) throws IOException {
-                HttpServletRequest request = (HttpServletRequest) event.getSuppliedRequest();
-                System.out.println("XXXXX AsyncListener.onTimeout: session id = " + request.getSession().getId() + ", timeout = " + event.getAsyncContext().getTimeout());
-            }
-
-            @Override
-            public void onError(AsyncEvent event) throws IOException {
-                HttpServletRequest request = (HttpServletRequest) event.getSuppliedRequest();
-                System.out.println("XXXXX AsyncListener.onError: session id = " + request.getSession().getId() + ", error = " + ExceptionUtils.getStackTrace(event.getThrowable()));
-            }
-
-            @Override
-            public void onStartAsync(AsyncEvent event) throws IOException {
-            }
-        });
         exec.execute(new AsyncHandler(asyncContext));
     }
 
@@ -121,11 +100,11 @@ public abstract class GameServlet extends HttpServlet {
 
         private ClientMessage getClientMessage(HttpServletRequest request) {
             Map<String, Object> attributes = new HashMap<>();
-            for (Enumeration<String> parameterNames = request.getParameterNames(); parameterNames.hasMoreElements();) {
-                String parameterName = parameterNames.nextElement();
+            for (Enumeration<String> names = request.getParameterNames(); names.hasMoreElements();) {
+                String parameterName = names.nextElement();
                 attributes.put(parameterName, request.getParameter(parameterName));
             }
-            return new ClientMessage(request.getSession().getId(), attributes);
+            return new ClientMessage(GlobalGameCoordinator.getPlayer(request.getSession().getId()), attributes);
         }
     }
 }

@@ -2,7 +2,7 @@ package com.games.euchre.messages;
 
 import com.games.euchre.Card;
 import com.games.euchre.Trick;
-import com.games.server.Player;
+import com.games.server.PlayerContainer;
 import com.games.server.ServerMessage;
 
 /**
@@ -16,7 +16,7 @@ public class CardPlayedMessage extends ServerMessage {
 
     public static final String ACTION = "cardPlayed";
 
-    public CardPlayedMessage(Trick trick, Player player, Card card) {
+    public CardPlayedMessage(Trick trick, PlayerContainer player, Card card) {
         super(ACTION,
             GAME_ID_KEY, trick.getHand().getGame().getId(),
             "handNumber", trick.getHand().getNumber(),

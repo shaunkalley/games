@@ -15,8 +15,8 @@ import com.games.server.Message;
  */
 public class RandomCardEuchreAIPlayer extends EuchreAIPlayer {
 
-    public RandomCardEuchreAIPlayer(GameCoordinator gameCoordinator) {
-        super(gameCoordinator);
+    public RandomCardEuchreAIPlayer(GameCoordinator gameCoordinator, EuchreGame game) {
+        super(gameCoordinator, game);
     }
 
     public void handleMessage(Message message) {

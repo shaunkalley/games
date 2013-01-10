@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.games.server.GameOptions;
 import com.games.util.ReadOnlyCollectionResult;
 import org.apache.commons.lang3.ArrayUtils;
 import static com.games.euchre.EuchreGameOptions.ScoringType.EUCHRES;
@@ -22,7 +23,7 @@ import static com.games.euchre.Rank.*;
 * (counting points or euchres and the threshold for winning), and whether to
 * stick the dealer.
 */
-public class EuchreGameOptions {
+public class EuchreGameOptions extends GameOptions {
 
     public static EuchreGameOptions getDefaultGameOptions() {
         return new EuchreGameOptions();

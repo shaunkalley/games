@@ -1,6 +1,6 @@
 package com.games.euchre;
 
-import com.games.server.Player;
+import com.games.server.PlayerContainer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,52 +15,52 @@ import com.games.server.Player;
 public final class Partnership {
 
     /** The first player in the partnership. */
-    private final Player player1;
+    private final PlayerContainer playerContainer1;
 
     /** The second player in the partnership. */
-    private final Player player2;
+    private final PlayerContainer playerContainer2;
 
-    /** The points earned by the partners. */
+    /** The points earned by the partnership. */
     private int points;
 
-    /** The euchres achieved by the partners. */
+    /** The euchres achieved by the partnership. */
     private int euchres;
 
     /**
      * Creates a partnership for cutthroat Euchre where all players play alone.
      *
-     * @param player the sole player in the partnership
+     * @param playerContainer the sole player in the partnership
      */
-    public Partnership(Player player) {
-        this(player, null);
+    public Partnership(PlayerContainer playerContainer) {
+        this(playerContainer, null);
     }
 
     /**
      * Create a partnership for non-cutthroat Euchre.
      *
-     * @param player1 the player in the partnership who deals first
-     * @param player2 the second player in the partnership
+     * @param playerContainer1 the player in the partnership who deals first
+     * @param playerContainer2 the second player in the partnership
      */
-    public Partnership(Player player1, Player player2) {
-        this.player1 = player1;
-        this.player2 = player2;
+    public Partnership(PlayerContainer playerContainer1, PlayerContainer playerContainer2) {
+        this.playerContainer1 = playerContainer1;
+        this.playerContainer2 = playerContainer2;
     }
 
-    public Player getPlayer1() {
-        return player1;
+    public PlayerContainer getPlayerContainer1() {
+        return playerContainer1;
     }
 
-    public Player getPlayer2() {
-        return player2;
+    public PlayerContainer getPlayerContainer2() {
+        return playerContainer2;
     }
 
-    public boolean contains(Player player) {
-        return player == player1 || player == player2;
+    public boolean contains(PlayerContainer playerContainer) {
+        return playerContainer == playerContainer1 || playerContainer == playerContainer2;
     }
 
-    public Player getPartner(Player player) {
-        assert contains(player);
-        return player == player1 ? player2 : player1;
+    public PlayerContainer getPartner(PlayerContainer playerContainer) {
+        assert contains(playerContainer);
+        return playerContainer == playerContainer1 ? playerContainer2 : playerContainer1;
     }
 
     public int getPoints() {

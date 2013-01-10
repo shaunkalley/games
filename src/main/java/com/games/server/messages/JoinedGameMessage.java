@@ -15,6 +15,7 @@ public final class JoinedGameMessage extends ServerMessage {
     public static final String ACTION = "joinedGame";
 
     public JoinedGameMessage(Game game) {
+        // TODO: needs to send the game options back to the client
         super(ACTION, GAME_ID_KEY, game.getId(), "players", game.getPlayers());
     }
 }

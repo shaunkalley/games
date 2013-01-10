@@ -105,7 +105,7 @@ public final class MessageListener {
                                 try {
                                     channel.configureBlocking(false);
                                     channel.register(acceptReadSelector, SelectionKey.OP_READ);
-                                    String sessionId = RandomStringUtils.randomAlphanumeric(24);
+                                    String sessionId = RandomStringUtils.randomAlphanumeric(32);
                                     sessionChannelMap.put(sessionId, channel);
                                     channelBufferMap.put(channel, new MessageBuffer());
                                     addOutgoingMessage(channel, sessionId);

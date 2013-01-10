@@ -15,6 +15,8 @@ public abstract class Message {
 
     public static final String ACTION_KEY = "action";
 
+    public static final String ACK = "ack";
+
     public static final String GAME_ID_KEY = "gameId";
 
     private final Map<String, Object> attributes;

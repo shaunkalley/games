@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Time: 12:47 PM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class AIPlayer extends Player {
+public abstract class AIPlayer<T extends Game> extends Player {
 
     private static final AtomicLong counter = new AtomicLong(1000);
 
@@ -19,10 +19,11 @@ public abstract class AIPlayer extends Player {
 
     private final GameCoordinator coordinator;
 
-    public AIPlayer(GameCoordinator coordinator) {
+    private final T game;
+
+    public AIPlayer(GameCoordinator coordinator, T game) {
         super(nextNickname());
         this.coordinator = coordinator;
+        this.game = game;
     }
-
-    public abstract void handleMessage(Message message);
 }

@@ -2,7 +2,6 @@ package com.games.euchre;
 
 import javax.servlet.annotation.WebServlet;
 
-import com.games.server.GameProvider;
 import com.games.server.GameServlet;
 
 /**
@@ -15,9 +14,9 @@ import com.games.server.GameServlet;
 @WebServlet(name = "EuchreGameServlet", urlPatterns = { "/games/euchre/*" }, asyncSupported = true)
 public class EuchreGameServlet extends GameServlet {
 
-    private final GameProvider gameProvider = new EuchreGameProvider();
+    private final EuchreGameProvider gameProvider = new EuchreGameProvider();
 
-    public GameProvider getGameProvider() {
+    public EuchreGameProvider getGameProvider() {
         return gameProvider;
     }
 }

@@ -2,7 +2,6 @@ package com.games.euchre;
 
 import java.util.*;
 
-import com.games.euchre.messages.*;
 import com.games.server.*;
 import com.games.util.ReadOnlyCollectionResult;
 
@@ -19,13 +18,13 @@ import com.games.util.ReadOnlyCollectionResult;
  */
 public class EuchreGame extends Game {
 
-    private EuchreGameOptions gameOptions = EuchreGameOptions.getDefaultGameOptions();
+    private final EuchreGameOptions gameOptions;
 
-    private List<Player> dealOrder;
+    private List<PlayerContainer> dealOrder;
 
     private List<Partnership> partnerships;
 
-    private Player nextDealer;
+    private PlayerContainer nextDealer;
 
     private final List<Hand> hands;
 
@@ -33,17 +32,14 @@ public class EuchreGame extends Game {
 
     private Partnership winner;
 
-    public EuchreGame(String gameId, GameCoordinator gameCoordinator) {
+    public EuchreGame(String gameId, GameCoordinator gameCoordinator, EuchreGameOptions gameOptions) {
         super(gameId, gameCoordinator);
+        this.gameOptions = gameOptions;
         hands = new ArrayList<>();
     }
 
     public EuchreGameOptions getGameOptions() {
         return gameOptions;
-    }
-
-    public void setGameOptions(EuchreGameOptions gameOptions) {
-        this.gameOptions = gameOptions;
     }
 
     public boolean hasEnoughPlayers() {
@@ -55,26 +51,24 @@ public class EuchreGame extends Game {
         return partnerships;
     }
 
-    public Partnership getPartnership(Player player) {
-        assert players.contains(player);
+    public Partnership getPartnership(PlayerContainer playerContainer) {
+        assert players.contains(playerContainer);
         for (Partnership partnership : partnerships) {
-            if (partnership.contains(player)) {
+            if (partnership.contains(playerContainer)) {
                 return partnership;
             }
         }
         throw new AssertionError("player not found in partnerships");
     }
 
-    public Player getPartner(Player player) {
-        return getPartnership(player).getPartner(player);
+    public PlayerContainer getPartner(PlayerContainer playerContainer) {
+        return getPartnership(playerContainer).getPartner(playerContainer);
     }
 
-    public void startGame() {
-
-        assert hasEnoughPlayers();
+    protected void initGame() {
 
         // randomly determine deal order, which will also determine partnerships
-        List<Player> dealOrder = new ArrayList<>(players);
+        List<PlayerContainer> dealOrder = new ArrayList<>(players);
         Collections.shuffle(dealOrder);
         this.dealOrder = Collections.unmodifiableList(dealOrder);
         List<Partnership> partnerships = new ArrayList<>(dealOrder.size() / 2);
@@ -83,117 +77,20 @@ public class EuchreGame extends Game {
         }
         this.partnerships = Collections.unmodifiableList(partnerships);
 
-        // send notice of deal order and partnerships
-        GlobalGameCoordinator.enqueueMessage(new DealOrderSetMessage(this), players);
-
         // set the first dealer
         nextDealer = dealOrder.get(0);
+    }
 
-        try {
-            while (winner == null) {
-
-                // start hand
-                Hand hand = startNextHand();
-                GlobalGameCoordinator.enqueueMessage(new HandStartedMessage(this, hand), getPlayers());
-
-                // deal cards
-                hand.dealCards();
-                for (Player player : hand.getBidOrder()) {
-                    List<Card> dealtCards = hand.getDealtCards(player);
-                    GlobalGameCoordinator.enqueueMessage(new CardsDealtMessage(this, hand, dealtCards));
-                }
-
-                // first round of bidding
-                trumpdeclared:
-                for (Player player : hand.getBidOrder()) {
-                    ClientMessage message = getNextClientMessage(player, "passBid", "orderDealerUp", "pickCardUp");
-                    switch (message.getAction()) {
-                        case "passBid":
-                            GlobalGameCoordinator.enqueueMessage(new PlayerPassedBidMessage(this, hand));
-                            break;
-                        case "orderDealerUp":
-                            hand.dealerOrderedUp(GlobalGameCoordinator.getPlayer(message.getSessionId()), message.getBooleanAttribute("goingAlone"));
-                            //GlobalGameCoordinator.enqueueMessage(new PlayerOrderedDealerUpMessage(this));
-                            message = getNextClientMessage(hand.getDealer(), "discardCard");
-
-                            break trumpdeclared;
-                        case "pickUpCard":
-                            hand.dealerPickedUpCard(message.getBooleanAttribute("goingAlone"));
-                            //GlobalGameCoordinator.enqueueMessage(new DealerPickedUpCardMessage());
-                            message = getNextClientMessage(hand.getDealer(), "discardCard");
-
-
-                            break trumpdeclared;
-                        default:
-                            throw new AssertionError("");
-                    }
-                }
-
-                // second round of bidding
-                if (hand.getTrump() == null) {
-                    trumpdeclared:
-                    for (Player player : hand.getBidOrder()) {
-                        ClientMessage message = getNextClientMessage(player, "passBid", "declareTrump");
-                        switch (message.getAction()) {
-                            case "passBid":
-                                GlobalGameCoordinator.enqueueMessage(new PlayerPassedBidMessage(this, hand));
-                                break;
-                            case "declareTrump":
-                                hand.trumpDeclared(Suit.valueOf(message.getStringAttribute("suit")), GlobalGameCoordinator.getPlayer(message.getSessionId()), message.getBooleanAttribute("goingAlone"));
-                                GlobalGameCoordinator.enqueueMessage(new TrumpDeclaredMessage(this, hand));
-                                break trumpdeclared;
-                        }
-                    }
-                }
-
-                // play tricks
-                cardslayeddown:
-                for (int i = 0; i < gameOptions.getTricksPerHand(); i++) {
-                    Trick trick = hand.startNextTrick();
-                    for (Player player : trick.getPlayOrder()) {
-                        ClientMessage message = getNextClientMessage(player, "playCard", "layCardsDown");
-                        switch (message.getAction()) {
-                            case "playCard":
-                                try {
-                                    Card card = Card.parse(message.getStringAttribute("card"));
-                                    trick.cardPlayed(player, card);
-                                    GlobalGameCoordinator.enqueueMessage(new CardPlayedMessage(trick, player, card), players);
-                                } catch (DidNotFollowSuitException e) {
-                                    // TODO
-                                }
-                                break;
-                            case "layCardsDown":
-                                // TODO
-                                break cardslayeddown;
-
-                        }
-                    }
-                    // TODO: send trick finished message
-
-                    // check if more tricks need to be played in order to score the hand
-                    if (hand.areAllPointsPlayed()) {
-                        break;
-                    }
-                }
-
-                // score the hand
-
-
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    protected GameAction getNextAction() {
+        // TODO
+        return null;
     }
 
     @ReadOnlyCollectionResult
-    public List<Player> getDealOrder() {
+    public List<PlayerContainer> getDealOrder() {
         return dealOrder;
     }
 
-    /**
-     *
-     * @return
-     */
     private Hand startNextHand() {
         currentHand = new Hand(this, hands.size() + 1, nextDealer);
         hands.add(currentHand);
@@ -205,23 +102,4 @@ public class EuchreGame extends Game {
         // TODO
         return scores;
     }
-
-//    public ServerMessage handleMessage(ClientMessage clientMessage) {
-//        switch (clientMessage.getAction()) {
-//            case "passBid":
-//                return passBid(clientMessage);
-//            case "orderDealerUp":
-//                return orderDealerUp(clientMessage);
-//            case "pickCardUp":
-//                return pickCardUp(clientMessage);
-//            case "discardCard":
-//                return discardCard(clientMessage);
-//            case "declareTrump":
-//                return declareTrump(clientMessage);
-//            case "playCard":
-//                return playCard(clientMessage);
-//            default:
-//                return new InvalidClientMessageMessage(clientMessage, "unknown action");
-//        }
-//    }
 }

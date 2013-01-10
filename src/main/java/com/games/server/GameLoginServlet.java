@@ -50,9 +50,6 @@ public class GameLoginServlet extends HttpServlet {
             case "register":
                 handleRegistration(request, response);
                 break;
-            default:
-                response.sendError(SC_NOT_FOUND);
-                break;
         }
     }
 
@@ -74,8 +71,9 @@ public class GameLoginServlet extends HttpServlet {
         }
         // TODO: do checks on the nickname for uniqueness, etc.
         AnonymousPlayer player = new AnonymousPlayer(nickname);
-        String loginId = GlobalGameCoordinator.playerLoggedIn(request.getSession().getId(), player);
-        response.addCookie(new Cookie("loginId", loginId));
+        PlayerContainer container = new PlayerContainer(player);
+        GlobalGameCoordinator.addPlayer(request.getSession().getId(), container);
+        response.addCookie(new Cookie("playerSessionId", player.getSessionId()));
         response.setStatus(SC_OK);
     }
 

@@ -30,6 +30,8 @@ public final class GameCoordinator {
         assert clientMessage != null;
         logger.info("Handling client message: action=" + clientMessage.getAction() + ", attributes=" + clientMessage.getAttributes());
         switch (clientMessage.getAction()) {
+            case "createGame":
+                return createGame(clientMessage);
             case "joinGame":
                 return joinGame(clientMessage);
             case "leaveGame":
@@ -39,22 +41,31 @@ public final class GameCoordinator {
             case "getNextMessage":
                 return getNextMessage(clientMessage);
             default:
-                // all other messages are assumed to be game specific and are
-                // handled by the game itself
-                return GlobalGameCoordinator.getGame(GlobalGameCoordinator.getPlayer(clientMessage.getSessionId())).handleGameSpecificMessage(clientMessage);
+                // all other messages are assumed to be game specific and are handled by the game itself
+                GlobalGameCoordinator.getGame(clientMessage.getSender()).handleMessage(clientMessage);
+                return null;
         }
     }
 
     @Callback
+    private ServerMessage createGame(ClientMessage clientMessage) {
+        GameOptions gameOptions = gameProvider.createGameOptions();
+        // TODO: parse game options from client message
+        Game game = gameProvider.createGame(this, gameOptions);
+        // TODO: make game available to other players
+        return new GameCreatedMessage(game);
+    }
+
+    @Callback
     private ServerMessage joinGame(ClientMessage clientMessage) {
-        Player player = GlobalGameCoordinator.getPlayer(clientMessage.getSessionId());
+        PlayerContainer player = clientMessage.getSender();
         if (player == null) {
             return new InvalidClientMessageMessage(clientMessage, "not logged in");
         }
         Game game;
         synchronized (this) {
             if (nextGame == null) {
-                nextGame = gameProvider.createGame(this);
+                nextGame = gameProvider.createGame(this, gameProvider.createGameOptions());
             }
             assert !nextGame.hasEnoughPlayers();
             nextGame.addPlayer(player);
@@ -75,26 +86,22 @@ public final class GameCoordinator {
      */
     private void gameFormed(final Game game) {
         // prepare a message for each player in the game notifying them that the game has formed
-        GlobalGameCoordinator.enqueueMessage(new GameFormedMessage(game), game.getPlayers());
+        GameHelper.enqueueServerMessage(new GameFormedMessage(game), game.getPlayers());
 
         // hand off control to the game itself...
-        Thread gameThread = new Thread() {
-            public void run() {
-                game.startGame();
-                // prepare a message for each player in the game notifying them that the game has started
-                GlobalGameCoordinator.enqueueMessage(new GameStartedMessage(game), game.getPlayers());
-            }
-        };
-        gameThread.setDaemon(true);
-        gameThread.start();
+        game.startGame();
     }
 
+    /**
+     * Callback for if a player chooses to leave a game before its over.
+     *
+     * @param clientMessage the client message
+     * @return the PlayerReplacedMessage server message
+     */
     @Callback
     private ServerMessage leaveGame(ClientMessage clientMessage) {
-        Player player = GlobalGameCoordinator.getPlayer(clientMessage.getSessionId());
-        if (player == null) {
-            return new InvalidClientMessageMessage(clientMessage, "not logged in");
-        }
+        PlayerContainer player = clientMessage.getSender();
+        assert player != null;
         Game game = GlobalGameCoordinator.getGame(player);
         if (game == null) {
             return new InvalidClientMessageMessage(clientMessage, "not in game");
@@ -103,9 +110,10 @@ public final class GameCoordinator {
         if (!gameId.equals(game.getId())) {
             return new InvalidClientMessageMessage(clientMessage, "invalid game id");
         }
-        AIPlayer replacementPlayer = gameProvider.createAIPlayer(this);
-        game.replacePlayer(player, replacementPlayer);
-        return new PlayerLeftGameMessage(game, (HumanPlayer) player, replacementPlayer);
+        PlayerSummaryDetails oldSummaryDetails = player.getSummaryDetails();
+        player.setPlayer(gameProvider.createAIPlayer(this, game));
+        PlayerSummaryDetails newSummaryDetails = player.getSummaryDetails();
+        return new PlayerReplacedMessage(game, oldSummaryDetails, newSummaryDetails);
     }
 
     @Callback
@@ -116,6 +124,7 @@ public final class GameCoordinator {
 
     @Callback
     private ServerMessage getNextMessage(ClientMessage clientMessage) throws InterruptedException {
-        return GlobalGameCoordinator.getNextMessage(GlobalGameCoordinator.getPlayer(clientMessage.getSessionId()));
+        return null;
+        //return GameHelper.getNextServerMessage(GlobalGameCoordinator.getPlayer(clientMessage.getSessionId()));
     }
 }

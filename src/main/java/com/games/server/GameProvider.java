@@ -7,9 +7,15 @@ package com.games.server;
  * Time: 12:12 PM
  * To change this template use File | Settings | File Templates.
  */
-public interface GameProvider {
+public abstract class GameProvider {
 
-    Game createGame(GameCoordinator gameCoordinator);
+    public abstract GameOptions createGameOptions();
 
-    AIPlayer createAIPlayer(GameCoordinator gameCoordinator);
+    public final Game createGame(GameCoordinator gameCoordinator) {
+        return createGame(gameCoordinator, createGameOptions());
+    }
+
+    public abstract Game createGame(GameCoordinator gameCoordinator, GameOptions gameOptions);
+
+    public abstract AIPlayer createAIPlayer(GameCoordinator gameCoordinator, Game game);
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.games.server.Player;
+import com.games.server.PlayerContainer;
 import com.games.util.ReadOnlyCollectionResult;
 import static com.games.euchre.EuchreHelper.*;
 
@@ -25,7 +25,7 @@ public final class Trick {
     private final int number;
 
     /** The players in order that they play in the trick. */
-    private List<Player> playOrder;
+    private List<PlayerContainer> playOrder;
 
     /** The cards in order that they were played in the trick. */
     private List<Card> cards;
@@ -34,9 +34,9 @@ public final class Trick {
     private int turn;
 
     /** The winner of this trick. */
-    private Player winner;
+    private PlayerContainer winner;
 
-    public Trick(Hand hand, int number, List<Player> playOrder) {
+    public Trick(Hand hand, int number, List<PlayerContainer> playOrder) {
         EuchreGameOptions gameOptions = hand.getGame().getGameOptions();
         int numberOfPlayers = gameOptions.getNumberOfPlayers();
         if (playOrder.size() != numberOfPlayers && playOrder.size() != numberOfPlayers - 1) {
@@ -58,11 +58,11 @@ public final class Trick {
     }
 
     @ReadOnlyCollectionResult
-    public List<Player> getPlayOrder() {
+    public List<PlayerContainer> getPlayOrder() {
         return playOrder;
     }
 
-    public void cardPlayed(Player player, Card card) throws DidNotFollowSuitException {
+    public void cardPlayed(PlayerContainer player, Card card) throws DidNotFollowSuitException {
         if (!isPlayersTurn(player)) {
             throw new AssertionError("not player's turn");
         }
@@ -86,7 +86,7 @@ public final class Trick {
         Suit trump = hand.getTrump();
         Suit leadSuit = cards.get(0).getSuit();
         Card winningCard = cards.get(0);
-        Player winner = playOrder.get(0);
+        PlayerContainer winner = playOrder.get(0);
         for (int i = 1; i < playOrder.size(); i++) {
             Card card = cards.get(i);
             if (isHigherThan(card, winningCard, trump, leadSuit)) {
@@ -97,7 +97,7 @@ public final class Trick {
         this.winner = winner;
     }
 
-    public Player getWinner() {
+    public PlayerContainer getWinner() {
         return winner;
     }
 
@@ -110,11 +110,11 @@ public final class Trick {
         return turn == 0;
     }
 
-    private boolean isPlayersTurn(Player player) {
+    private boolean isPlayersTurn(PlayerContainer player) {
         return playOrder.get(turn) == player;
     }
 
-    private boolean didFollowSuit(Player player, Card card) {
+    private boolean didFollowSuit(PlayerContainer player, Card card) {
         Card leadCard = cards.get(0);
         assert leadCard != null;
         return card.getSuit() == leadCard.getSuit() || !hand.hasSuit(player, card.getSuit());
